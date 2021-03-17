@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
 import { NumberFormat } from "./utils/Format";
 
 const App: React.FC = () => {
@@ -23,11 +23,21 @@ const App: React.FC = () => {
     setCurrentNumber(currentNumber.substring(0, currentNumber.length - 1));
   }
 
-  function addHistoric(...value: string[]) {
-    setHistoricNumber([...historicNumber, ...value]);
+  function toast(message: string) {
+    if (Platform.OS === "android") {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert(message);
+    }
   }
 
   const onButtonPress = (buttonPressed: string) => {
+    let isLeftZero = currentNumber.concat(buttonPressed).charAt(0) == "0";
+    let isPressedZero = buttonPressed == "0";
+    let lastChar = currentNumber.charAt(currentNumber.length - 1);
+    let isLastCharOperator = operations.indexOf(lastChar) > -1;
+    let hasOperationClicked = (operations.indexOf(buttonPressed) > -1 && operations.indexOf(lastChar) > -1);
+
     switch (buttonPressed) {
       case "AC":
         clear();
@@ -36,16 +46,13 @@ const App: React.FC = () => {
         backspace();
         return;
       case "=":
+        if (isLastCharOperator) {
+          toast("invalid used format");
+          return;
+        }
         return;
       default:
-        let isLeftZero = currentNumber.concat(buttonPressed).charAt(0) == "0";
-        let isPressedZero = buttonPressed == "0";
-        let lastChar = currentNumber.charAt(currentNumber.length - 1);
-        let hasOperationAlreadyPress = (operations.indexOf(buttonPressed) > 0 && operations.indexOf(lastChar) > 0);
-
-        console.log(lastChar)
-
-        if (isLeftZero && isPressedZero || hasOperationAlreadyPress) {
+        if (isLeftZero && isPressedZero || hasOperationClicked) {
           return;
         } else if (isLeftZero) {
           setCurrentNumber(buttonPressed);
@@ -126,7 +133,8 @@ const App: React.FC = () => {
               paddingVertical: 8,
               backgroundColor: "#7E68CF",
               borderRadius: 8
-            }]}>
+            }]}
+                              onPress={() => onButtonPress("=")}>
               <Text style={styles.textButton}>=</Text>
             </TouchableOpacity>
           </View>
